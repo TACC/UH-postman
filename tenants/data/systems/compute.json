@@ -1,0 +1,55 @@
+{
+  "id": "postman-test-compute-mp-{{TEST_DATE}}",
+    "name": "System Sandbox Configured as Execution System",
+    "status": "UP",
+    "type": "EXECUTION",
+      "description": "Testing Execution System",
+    "site": "agaveapi.co",
+    "executionType": "CLI",
+      "scratchDir": null,
+      "workDir": null,
+     "queues": [
+       {
+         "name": "debug",
+         "maxJobs": 100,
+         "maxUserJobs": 10,
+         "maxNodes": 128,
+         "maxMemoryPerNode": "2GB",
+         "maxProcessorsPerNode": 128,
+         "maxRequestedTime": "24:00:00",
+         "customDirectives": "",
+         "default": true
+       }
+     ],
+     "login":{
+       "host":"129.114.6.93",
+       "port":22,
+        "protocol": "SSH",
+        "scratchDir": "/scratch",
+        "workDir": "/work",
+        "auth":{
+          "username":"rodeo",
+          "publicKey": "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQCqEc9MsDtK+aYa+39MWCJ1d1RvZY1z0RQUzyh5m6ScusO4vz7eU2GMJzwyDNBqScGQuAe0myrc3vEt3EFOTGff4z3PwNQ41sCWG1PDmlgHE0vHZTOgOJFCMdtBEsm+sMmZoQyn0Sr6jVBF1OS3r/fpuqJ8SI/O2ft/P17j9Ldz5w3KdhYxZ6Gf3IfG/0TkLU0Svx8EQlt2dCa1UUEejq6j5JT3svID4FJr36A5fiZctb6293IsWjNhPoJmcBuyHXY0bNIdn7BsPogWApZ5gEwashRDE2QKGfFteNjiBTFjkjRzYwCUYg+GZ+TeZR+pz9hL77HOsd7cbfMLgbMrN1p1 kulisics@linux-zhbh.suse",
+          "privateKey": "-----BEGIN RSA PRIVATE KEY-----\nMIIEowIBAAKCAQEAqhHPTLA7SvmmGvt/TFgidXdUb2WNc9EUFM8oeZuknLrDuL8+\n3lNhjCc8MgzQaknBkLgHtJsq3N7xLdxBTkxn3+M9z8DUONbAlhtTw5pYBxNLx2Uz\noDiRQjHbQRLJvrDJmaEMp9Eq+o1QRdTkt6/36bqifEiPztn7fz9e4/S3c+cNynYW\nMWehn9yHxv9E5C1NEr8fBEJbdnQmtVFBHo6uo+SU97LyA+BSa9+gOX4mXLW+tvdy\nLFozYT6CZnAbsh12NGzSHZ+wbD6IFgKWeYBMGrIUQxNkChnxbXjY4gUxY5I0c2MA\nlGIPhmfk3mUfqc/YS++xzrHe3G3zC4GzKzdadQIDAQABAoIBAC7s+Rj8629VkQqS\n6F4FV4S351lRWQVi5DqVqmJbmsEQG18Hje5EbX8BeG+K75rUPQ+UZ7PiuKH29e8k\nffR/yo2RIwYG+8evIbaJVcR7+twA7ADZoLQNx67PGONMrtPp7cZxFI/dfBFkGoka\nI/23FR2tvJW0Y9G8fdNvhdw6MsBMxjcD5bD7y2fY0kYXSJwao4oO95HoQ8i/Gn+f\nHRih672osjax9QPvXHMCRjoGtzXVXwo/K6ReP9M8IAEtD3wxOTO1zGYvBUT1XmME\n8sTNfPHaMRgogIWUZfV1prkcwIJ8u1Uujl3E8IyEpYkiZk+Bn5TY2B3rhDebkoiv\ngm3Nh8UCgYEA3h6vkiihGk2tX4N4b46SfTnTAgx7Zuxl+9qZEtADbvnpWO9f+yoA\nEfaNBc+99LBaaOhuVF7YlU32G+8y96o9P9InlBq7wTtabeI1HLDQNRcAfvNxI1xe\nIcJYCdn90F3l57ZVxLRiabu5StSFmPnGIkznWRkLkqzs+uxJPJIMkmsCgYEAxAKr\nT23DpjPQeVPiXLnVFkENuhyaCiSCWZcgI6oVHiyzTgx72oZJvm+JUQFNON8Sp70I\n3shXL7cQsHW5Hi4sqyMaKT5JdiZACFvuzd2UcelNnzAKjSc+amCnbKwZ35FT70aL\npcrqI4NXqcUgwUjZUj1frmQGnpdj8guDc3N3vp8CgYByyHK8WgieuiNs51i2dXvY\nAKi9N0wR7Pnqw5U09o+/qp/emJ0GAzdUEQ/hP/CO4Q9nhS12pijQRyB2YQ76k1vh\nfi17yLDb81sQy8PclraRqNhVwmHl/xaZ5X9vX9pc8hkbu8rowrrUnvDq7ZY4bmLo\nWMt47IthecFhDffuuB6NDwKBgHiSk8LGaIXCdclMeoBDp/qKheEoWvFGSBDIT/Lg\nWyE2qg2mzEE+PfqxLazwugnz3svkEqLIZilp2RBTOk6AZOXZL+yS7imJmfYKZzmn\nxfrUYvU7XiI6M8DIN/U3YKsQAKu9n4Wa7rBtyO0b3+xF3bkjG8pwqUnBIq/vuSq5\nqr1NAoGBAImwRDGBM9d55zC+5mXOGGsXJRJLHAwZgM4hwjd1fISEajdmiw0zlUOt\nxEEAlUXHYuPPH4EeyaP6BPJrHsAWA4z89nkz2fgdr4PmXdbnAj2z8p9M/l8dHpcW\nklgQGz74EJ4H6xEidjG6tMBuFYNfOy7cv36yEVjygvv4op+PiYhR\n-----END RSA PRIVATE KEY-----\n",
+          "type": "SSHKEYS"
+        }
+     },
+     "storage":{
+       "host":"129.114.6.93",
+       "port":22,
+       "protocol":"SFTP",
+       "rootDir":"/",
+       "homeDir":"/home/rodeo",
+       "auth":{
+          "username":"rodeo",
+          "publicKey": "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQCqEc9MsDtK+aYa+39MWCJ1d1RvZY1z0RQUzyh5m6ScusO4vz7eU2GMJzwyDNBqScGQuAe0myrc3vEt3EFOTGff4z3PwNQ41sCWG1PDmlgHE0vHZTOgOJFCMdtBEsm+sMmZoQyn0Sr6jVBF1OS3r/fpuqJ8SI/O2ft/P17j9Ldz5w3KdhYxZ6Gf3IfG/0TkLU0Svx8EQlt2dCa1UUEejq6j5JT3svID4FJr36A5fiZctb6293IsWjNhPoJmcBuyHXY0bNIdn7BsPogWApZ5gEwashRDE2QKGfFteNjiBTFjkjRzYwCUYg+GZ+TeZR+pz9hL77HOsd7cbfMLgbMrN1p1 kulisics@linux-zhbh.suse",
+          "privateKey": "-----BEGIN RSA PRIVATE KEY-----\nMIIEowIBAAKCAQEAqhHPTLA7SvmmGvt/TFgidXdUb2WNc9EUFM8oeZuknLrDuL8+\n3lNhjCc8MgzQaknBkLgHtJsq3N7xLdxBTkxn3+M9z8DUONbAlhtTw5pYBxNLx2Uz\noDiRQjHbQRLJvrDJmaEMp9Eq+o1QRdTkt6/36bqifEiPztn7fz9e4/S3c+cNynYW\nMWehn9yHxv9E5C1NEr8fBEJbdnQmtVFBHo6uo+SU97LyA+BSa9+gOX4mXLW+tvdy\nLFozYT6CZnAbsh12NGzSHZ+wbD6IFgKWeYBMGrIUQxNkChnxbXjY4gUxY5I0c2MA\nlGIPhmfk3mUfqc/YS++xzrHe3G3zC4GzKzdadQIDAQABAoIBAC7s+Rj8629VkQqS\n6F4FV4S351lRWQVi5DqVqmJbmsEQG18Hje5EbX8BeG+K75rUPQ+UZ7PiuKH29e8k\nffR/yo2RIwYG+8evIbaJVcR7+twA7ADZoLQNx67PGONMrtPp7cZxFI/dfBFkGoka\nI/23FR2tvJW0Y9G8fdNvhdw6MsBMxjcD5bD7y2fY0kYXSJwao4oO95HoQ8i/Gn+f\nHRih672osjax9QPvXHMCRjoGtzXVXwo/K6ReP9M8IAEtD3wxOTO1zGYvBUT1XmME\n8sTNfPHaMRgogIWUZfV1prkcwIJ8u1Uujl3E8IyEpYkiZk+Bn5TY2B3rhDebkoiv\ngm3Nh8UCgYEA3h6vkiihGk2tX4N4b46SfTnTAgx7Zuxl+9qZEtADbvnpWO9f+yoA\nEfaNBc+99LBaaOhuVF7YlU32G+8y96o9P9InlBq7wTtabeI1HLDQNRcAfvNxI1xe\nIcJYCdn90F3l57ZVxLRiabu5StSFmPnGIkznWRkLkqzs+uxJPJIMkmsCgYEAxAKr\nT23DpjPQeVPiXLnVFkENuhyaCiSCWZcgI6oVHiyzTgx72oZJvm+JUQFNON8Sp70I\n3shXL7cQsHW5Hi4sqyMaKT5JdiZACFvuzd2UcelNnzAKjSc+amCnbKwZ35FT70aL\npcrqI4NXqcUgwUjZUj1frmQGnpdj8guDc3N3vp8CgYByyHK8WgieuiNs51i2dXvY\nAKi9N0wR7Pnqw5U09o+/qp/emJ0GAzdUEQ/hP/CO4Q9nhS12pijQRyB2YQ76k1vh\nfi17yLDb81sQy8PclraRqNhVwmHl/xaZ5X9vX9pc8hkbu8rowrrUnvDq7ZY4bmLo\nWMt47IthecFhDffuuB6NDwKBgHiSk8LGaIXCdclMeoBDp/qKheEoWvFGSBDIT/Lg\nWyE2qg2mzEE+PfqxLazwugnz3svkEqLIZilp2RBTOk6AZOXZL+yS7imJmfYKZzmn\nxfrUYvU7XiI6M8DIN/U3YKsQAKu9n4Wa7rBtyO0b3+xF3bkjG8pwqUnBIq/vuSq5\nqr1NAoGBAImwRDGBM9d55zC+5mXOGGsXJRJLHAwZgM4hwjd1fISEajdmiw0zlUOt\nxEEAlUXHYuPPH4EeyaP6BPJrHsAWA4z89nkz2fgdr4PmXdbnAj2z8p9M/l8dHpcW\nklgQGz74EJ4H6xEidjG6tMBuFYNfOy7cv36yEVjygvv4op+PiYhR\n-----END RSA PRIVATE KEY-----\n",
+          "type": "SSHKEYS"
+       }
+     },
+     "maxSystemJobs": 100,
+     "maxSystemJobsPerUser": 10,
+     "scheduler": "FORK",
+     "environment": "",
+     "startupScript": null
+  }

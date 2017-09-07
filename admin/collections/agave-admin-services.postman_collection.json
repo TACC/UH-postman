@@ -1,0 +1,1619 @@
+{
+	"variables": [],
+	"info": {
+		"name": "agave-admin-services",
+		"_postman_id": "6375845d-87b9-0b1b-e3b7-4efcef476423",
+		"description": "tenant administration and management of configurable aspects of the platform.",
+		"schema": "https://schema.getpostman.com/json/collection/v2.0.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "000 setup",
+			"description": "",
+			"item": [
+				{
+					"name": "Create a New Client",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"var requestname=\"Create a New Client: \";",
+									"",
+									"try {",
+									"    // successful response, validate the returned key",
+									"    if(responseCode.code===200 || responseCode.code===201) {",
+									"       ",
+									"        var agaveResponse=JSON.parse(responseBody);",
+									"        tests[requestname+\"Objected returned . . .\"]=(agaveResponse.result instanceof Object);",
+									"        tests[requestname+\"Client key returned . . .\"]=(agaveResponse.result.consumerKey.length>0);",
+									"        tests[requestname+\"Client secret returned . . .\"]=(agaveResponse.result.consumerSecret.length>0);",
+									"        ",
+									"        // if a token was generated, keep for use in the suite",
+									"        if (tests[requestname+\"Client key returned . . .\"] && tests[requestname+\"Client secret returned . . .\"]) {",
+									"            postman.setEnvironmentVariable(\"CLIENT_KEY\",agaveResponse.result.consumerKey);",
+									"            postman.setEnvironmentVariable(\"CLIENT_SECRET\",agaveResponse.result.consumerSecret);",
+									"        }",
+									"        // clean up the client just in case it was created",
+									"        else {",
+									"            console.log(requestname+responseBody);",
+									"            postman.setNextRequest(\"cleanup::Start\");",
+									"        }",
+									"    }",
+									"    // a 404 is valid in the event we are running backend tests",
+									"    else if(responseCode.code===404 && postman.getEnvironmentVariable(\"SKIP_FRONTEND\")) {",
+									"        var nextRequest = \"Create a Storage System\";",
+									"        console.log(\"Skipping frontend client key generation. Backend tests enabled...\");",
+									"        console.log(\"Next request: \" + nextRequest);",
+									"        tests[requestname+\"Skip client creation calls . . .\"]=true;",
+									"        postman.setNextRequest(nextRequest);",
+									"    }",
+									"    // anything else is an error ",
+									"    else {",
+									"        throw new Exception(responseBody);",
+									"    }",
+									"}",
+									"catch(e){",
+									"    ",
+									"    tests[requestname+\"Fetch new credential for tests . . .\"]=false;",
+									"    console.log(requestname+e);",
+									"    tests[requestname+\"Result is JSON . . . \"]=false;",
+									"    // stop all tests",
+									"    postman.setNextRequest(null);",
+									"}",
+									"    ",
+									"    ",
+									"",
+									""
+								]
+							}
+						},
+						{
+							"listen": "prerequest",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"var date=new Date();",
+									"if (environment.hasOwnProperty('TEST_DATE') && environment[\"TEST_DATE\"] ) {",
+									"    console.log(\"Using existing timestamp from the environment.\");",
+									"}",
+									"else {",
+									"    console.log(\"No TEST_DATE provided. Generating timestamp from the environment.\");",
+									"    postman.setEnvironmentVariable(\"TEST_DATE\", date.getTime().toString());",
+									"}",
+									"",
+									"postman.setEnvironmentVariable(\"CLIENT_NAME\",\"postman-admin-test-client-\"+environment[\"TEST_DATE\"]);",
+									"",
+									"postman.setEnvironmentVariable(\"CUSTOM_API_NAME\",\"postmanTestApi\"+environment[\"TEST_DATE\"]);",
+									"postman.setEnvironmentVariable(\"CUSTOM_API_CONTEXT\",\"postmanTestApiContext\"+environment[\"TEST_DATE\"]);",
+									"postman.setEnvironmentVariable(\"CUSTOM_API_VERSION\",\"v\"+environment[\"TEST_DATE\"]);",
+									"postman.setEnvironmentVariable(\"SERVICE_ACCOUNT_NAME\",\"postmanServiceAccount\"+environment[\"TEST_DATE\"]);",
+									"postman.setEnvironmentVariable(\"SERVICE_ACCOUNT_ROLE\",\"postmanServiceAccountRole\"+environment[\"TEST_DATE\"]);",
+									"",
+									"postman.setEnvironmentVariable(\"BASIC_AUTHORIZATION_TYPE\",\"Basic\");",
+									"postman.setEnvironmentVariable(\"BASIC_AUTHORIZATION_USER_TOKEN\",btoa(environment[\"USERNAME\"]+\":\"+environment[\"PASSWORD\"]));",
+									""
+								]
+							}
+						}
+					],
+					"request": {
+						"url": "{{BASEURL}}/clients/v2/",
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "{{BASIC_AUTHORIZATION_TYPE}} {{BASIC_AUTHORIZATION_USER_TOKEN}}",
+								"description": ""
+							}
+						],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "clientName",
+									"value": "{{CLIENT_NAME}}",
+									"type": "text",
+									"enabled": true
+								},
+								{
+									"key": "description",
+									"value": "",
+									"type": "text",
+									"enabled": true
+								},
+								{
+									"key": "tier",
+									"value": "Unlimited",
+									"type": "text",
+									"enabled": true
+								},
+								{
+									"key": "callbackUrl",
+									"value": "",
+									"type": "text",
+									"enabled": true
+								}
+							]
+						},
+						"description": ""
+					},
+					"response": []
+				},
+				{
+					"name": "Generate an Access Token",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"var requestname=\"Generate an Access Token: \";",
+									"",
+									"function firstcap(astring){",
+									"    return astring.substr(0,1).toUpperCase()+astring.substr(1);",
+									"}",
+									"",
+									"tests[requestname+\"Status code 200 . . . \"]=responseCode.code===200;",
+									"",
+									"if(tests[requestname+\"Status code 200 . . . \"]) {",
+									"    ",
+									"    var result=JSON.parse(responseBody);",
+									"    ",
+									"    tests[requestname+\"Access token generated . . . \"]=result[\"token_type\"]===\"bearer\";",
+									"    ",
+									"    if(tests[requestname+\"Access token generated . . . \"]){",
+									"        ",
+									"        postman.setEnvironmentVariable(\"AUTHORIZATION_TYPE\",firstcap(result[\"token_type\"]));",
+									"        postman.setEnvironmentVariable(\"AUTHORIZATION_TOKEN\",result[\"access_token\"]);",
+									"        ",
+									"    }",
+									"}",
+									"else { ",
+									"    console.log(requestname+responseBody); ",
+									"}"
+								]
+							}
+						},
+						{
+							"listen": "prerequest",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"postman.setEnvironmentVariable(\"AUTHORIZATION_TOKEN\",null);",
+									"postman.setEnvironmentVariable(\"BASIC_AUTHORIZATION_TOKEN\",btoa(environment[\"CLIENT_KEY\"]+\":\"+environment[\"CLIENT_SECRET\"]));"
+								]
+							}
+						}
+					],
+					"request": {
+						"url": "{{BASEURL}}/token",
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/x-www-form-urlencoded",
+								"description": ""
+							},
+							{
+								"key": "Authorization",
+								"value": "{{BASIC_AUTHORIZATION_TYPE}} {{BASIC_AUTHORIZATION_TOKEN}}",
+								"description": ""
+							}
+						],
+						"body": {
+							"mode": "urlencoded",
+							"urlencoded": [
+								{
+									"key": "username",
+									"value": "{{USERNAME}}",
+									"type": "text",
+									"enabled": true
+								},
+								{
+									"key": "password",
+									"value": "{{PASSWORD}}",
+									"type": "text",
+									"enabled": true
+								},
+								{
+									"key": "grant_type",
+									"value": "password",
+									"type": "text",
+									"enabled": true
+								},
+								{
+									"key": "scope",
+									"value": "PRODUCTION",
+									"type": "text",
+									"enabled": true
+								}
+							]
+						},
+						"description": "Generate an Access Token"
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "010 clients",
+			"description": "",
+			"item": [
+				{
+					"name": "clients::Subscribe Client to Admin APIs",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"var requestname=\"clients::Subscribe Client to Admin APIs: \";",
+									"",
+									"tests[requestname+\"Status code 200 . . . \"]=responseCode.code===200;",
+									"",
+									"if(tests[requestname+\"Status code 200 . . . \"]){",
+									"    ",
+									"    try{",
+									"    ",
+									"        var result=JSON.parse(responseBody);",
+									"        tests[requestname+\"Result is JSON . . . \"]=true;",
+									"        tests[requestname+\"Checking status . . . \"]=result[\"status\"]===\"success\";",
+									"        tests[requestname+\"Checking response message . . . \"]=(result[\"message\"]);",
+									"    ",
+									"    }catch(e){",
+									"    ",
+									"        console.log(requestname+e);",
+									"        tests[requestname+\"Result is JSON . . . \"]=false;",
+									"    ",
+									"    }",
+									"    ",
+									"}else{ console.log(requestname+responseBody); }"
+								]
+							}
+						}
+					],
+					"request": {
+						"url": "{{BASEURL}}/clients/v2/{{CLIENT_NAME}}/subscriptions/",
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "{{BASIC_AUTHORIZATION_TYPE}} {{BASIC_AUTHORIZATION_USER_TOKEN}}",
+								"description": ""
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"description": ""
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"apiName\": \"AdminServices\",\n    \"apiVersion\": \"v2\",\n    \"apiProvider\": \"admin\",\n    \"tier\": \"UNLIMITED\"\n}"
+						},
+						"description": ""
+					},
+					"response": []
+				},
+				{
+					"name": "clients::Verify subscription to Admin APIs",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"var requestname=\"clients::Verify subscription to Admin APIs: \";",
+									"",
+									"tests[requestname+\"Status code 200 . . . \"]=responseCode.code===200;",
+									"",
+									"if(tests[requestname+\"Status code 200 . . . \"]){",
+									"    ",
+									"    try{",
+									"    ",
+									"        var result=JSON.parse(responseBody);",
+									"        tests[requestname+\"Result is JSON . . . \"]=1===1;",
+									"        tests[requestname+\"Checking status . . . \"]=result[\"status\"]===\"success\";",
+									"        if(tests[requestname+\"Checking status . . . \"]){",
+									"            ",
+									"            tests[requestname+\"Checking result is array . . . \"]=(result[\"result\"] instanceof Array);",
+									"            ",
+									"            var responseMatches = result['result'].count(function(api) {",
+									"                return api.apiName === 'AdminServices';",
+									"            });",
+									"            ",
+									"            tests[requestname+\"Checking response contains AdminServices . . . \"]=responseMatches===1;",
+									"        }",
+									"    ",
+									"    }catch(e){",
+									"    ",
+									"        console.log(requestname+e);",
+									"        tests[requestname+\"Result is JSON . . . \"]=false;",
+									"    ",
+									"    }",
+									"    ",
+									"}else{ console.log(requestname+responseBody); }"
+								]
+							}
+						}
+					],
+					"request": {
+						"url": "{{BASEURL}}/clients/v2/{{CLIENT_NAME}}/subscriptions/",
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "{{BASIC_AUTHORIZATION_TYPE}} {{BASIC_AUTHORIZATION_USER_TOKEN}}",
+								"description": ""
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"description": ""
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": ""
+						},
+						"description": ""
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "020 apis",
+			"description": "Folder for apis",
+			"item": [
+				{
+					"name": "apis::List APIs",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"var requestname=\"apis::List APIs: \";",
+									"",
+									"tests[requestname+\"Status code 200 . . . \"]=responseCode.code===200;",
+									"",
+									"if(tests[requestname+\"Status code 200 . . . \"]){",
+									"    ",
+									"    try{",
+									"    ",
+									"        var result=JSON.parse(responseBody);",
+									"        tests[requestname+\"Result is JSON . . . \"]=1===1;",
+									"        tests[requestname+\"Checking status . . . \"]=result[\"status\"]===\"success\";",
+									"        if(tests[requestname+\"Checking status . . . \"]){",
+									"            ",
+									"            tests[requestname+\"Checking result is array . . . \"]=(result[\"result\"] instanceof Array);",
+									"            ",
+									"            var responseMatches = result['result'].none({name: 'AdminServices'});",
+									"            ",
+									"            tests[requestname+\"Checking response contains AdminServices . . . \"]=(!responseMatches);",
+									"        }",
+									"    ",
+									"    }catch(e){",
+									"    ",
+									"        console.log(requestname+e);",
+									"        tests[requestname+\"Result is JSON . . . \"]=false;",
+									"    ",
+									"    }",
+									"    ",
+									"}else{ console.log(requestname+responseBody); }"
+								]
+							}
+						}
+					],
+					"request": {
+						"url": "{{BASEURL}}/admin/v2/apis",
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "{{AUTHORIZATION_TOKEN_STRING}}",
+								"description": ""
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"description": ""
+							}
+						],
+						"body": {},
+						"description": "Manage the APIs available for subscription in a tenant. The API abstraction provides a mechanism for exposing external services through the same domain and authentication mechanism as the other Agave services. Defining an API entails providing a mapping between the front end URL (what the client consumes) and the backend service, defining what HTTP methods are available, defining whether the service is authenticated or not, and defining any roles that are required for subscribing to the API. \n"
+					},
+					"response": []
+				},
+				{
+					"name": "apis::Create a custom protected API",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"var requestname=\"apis::List Tenant APIs: \";",
+									"",
+									"tests[requestname+\"Status code 200 . . . \"]=responseCode.code===200;",
+									"",
+									"if(tests[requestname+\"Status code 200 . . . \"]){",
+									"    ",
+									"    try{",
+									"    ",
+									"        var serviceResponse=JSON.parse(responseBody);",
+									"        ",
+									"        tests[requestname+\"Result is JSON . . . \"]=(1===1);",
+									"        tests[requestname+\"Checking status . . . \"]=serviceResponse.status===\"success\";",
+									"        if(tests[requestname+\"Checking status . . . \"]){",
+									"            ",
+									"            tests[requestname+\"Checking result is object . . . \"]=(serviceResponse.result instanceof Object);",
+									"            ",
+									"            postman.setEnvironmentVariable('CUSTOM_API_ID',serviceResponse.result.id);",
+									"            ",
+									"            var schema = {",
+									"                \"type\": \"object\",",
+									"                \"properties\": {",
+									"                    \"name\": {",
+									"                        \"type\": \"string\",",
+									"                        \"description\": \"The name of the API; this is part of the unique id for the API and is referenced by users to subscribe to the API using the clients service.\"",
+									"                    },",
+									"                    \"context\": {",
+									"                        \"type\": \"string\",",
+									"                        \"description\": \"the path the API will be exposed under to the client.\"",
+									"                    },",
+									"                    \"version\": {",
+									"                        \"type\": \"string\",",
+									"                        \"description\": \"he (platform) version of the API. The current Agave platform version is 'v2'.\"",
+									"                    },",
+									"                    \"url\": {",
+									"                        \"type\": \"string\",",
+									"                        \"description\": \"The production URL for the backend service, including the protocol (http or https).\"",
+									"                    },",
+									"                    \"visibility\": {",
+									"                        \"type\": \"string\",",
+									"                        \"description\": \"Must be either 'public' or 'restricted'. If the visibility is set to public, any user will be allowed to subscribe to the API; if set to restricted, the roles parameter (below) must be passed and these roles will be required for subscription to the API.\"",
+									"                    },",
+									"                    \"roles\": {",
+									"                        \"type\": \"array\",",
+									"                        \"items\": {",
+									"                            \"type\": \"string\"",
+									"                        },",
+									"                        \"description\": \"(required when visibility = 'restricted') A list of roles required for subscription to the API.\"",
+									"                    },",
+									"                    \"methods\": {",
+									"                        \"type\": \"array\",",
+									"                        \"items\": {",
+									"                            \"type\": \"string\"",
+									"                        },",
+									"                        \"description\": \"The list of allowed HTTP methods from ('GET', 'POST', 'PUT', 'DELETE', 'HEAD').\"",
+									"                    },",
+									"                    \"auth\": {",
+									"                        \"type\": \"string\",",
+									"                        \"description\": \"Authentication type for the API; either a single string or a list of strings from ('none', 'oauth'). If none, then no authentication will be required for the API. Otherwise, an OAuth access token will be required. If a single string is provides, that auth type will be applied to all methods in the API. If a list is provided, the list must be the same length as the methods list and the auth type will be required for\"",
+									"                    }",
+									"                }",
+									"            };",
+									"            ",
+									"            // tests[requestname+\"Response validates schema definition . . . \"] = tv4.validate(serviceResponse.result, schema);",
+									"            ",
+									"            tests[requestname+\"Checking result name . . . \"]=(serviceResponse.result.name===environment['CUSTOM_API_NAME']);",
+									"        \ttests[requestname+\"Checking result context . . . \"]=(serviceResponse.result.context===environment['CUSTOM_API_CONTEXT']);",
+									"        \ttests[requestname+\"Checking result version . . . \"]=(serviceResponse.result.version===environment['CUSTOM_API_VERSION']);",
+									"        \ttests[requestname+\"Checking result url . . . \"]=(serviceResponse.result.url==='https://httpbin.agaveapi.co/');",
+									"        \ttests[requestname+\"Checking result visibility . . . \"]=(serviceResponse.result.visibility==='public');",
+									"        \t",
+									"        \ttests[requestname+\"Checking result roles is an array. . . \"]=(serviceResponse.result.roles instanceof Array);",
+									"        \ttests[requestname+\"Checking result roles is empty. . . \"]=(serviceResponse.result.roles.length===0);",
+									"        \t",
+									"        \ttests[requestname+\"Checking result methods is an array. . . \"]=(serviceResponse.result.methods instanceof Array);",
+									"        \ttests[requestname+\"Checking result methods . . . \"]=([\"GET\",\"POST\",\"PUT\", \"DELETE\", \"HEAD\"].subtract(serviceResponse.result.methods).length===0);",
+									"        \t",
+									"        \ttests[requestname+\"Checking result auth . . . \"]=(serviceResponse.result.auth===\"oauth\");",
+									"            ",
+									"        }",
+									"    ",
+									"    }catch(e){",
+									"    ",
+									"        console.log(requestname+e+\"\\n\"+responseBody);",
+									"        tests[requestname+\"Result is JSON . . . \"]=false;",
+									"    ",
+									"    }",
+									"    ",
+									"}else{ console.log(requestname+responseBody); }",
+									"",
+									"",
+									"",
+									"console.log(\"Validation failed: \", tv4.error);"
+								]
+							}
+						}
+					],
+					"request": {
+						"url": "{{BASEURL}}/admin/v2/apis",
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "{{AUTHORIZATION_TOKEN_STRING}}",
+								"description": ""
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"description": ""
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n\t\"name\": \"{{CUSTOM_API_NAME}}\",\n\t\"context\": \"{{CUSTOM_API_CONTEXT}}\",\n\t\"version\": \"{{CUSTOM_API_VERSION}}\",\n\t\"url\": \"https://httpbin.org\",\n\t\"visibility\": \"public\",\n\t\"roles\": [],\n\t\"methods\": [\"GET\",\"POST\",\"PUT\", \"DELETE\", \"HEAD\"],\n\t\"auth\": \"oauth\",\n\t\"status\": \"CREATED\"\n}"
+						},
+						"description": "Create a new protected API.\n"
+					},
+					"response": []
+				},
+				{
+					"name": "apis::Retrieve details about a custom API",
+					"request": {
+						"url": "{{BASEURL}}/admin/v2/apis/{{CUSTOM_API_ID}}",
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "{{AUTHORIZATION_TOKEN_STRING}}",
+								"description": ""
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"description": ""
+							}
+						],
+						"body": {},
+						"description": "Retrieve details about an API.\n"
+					},
+					"response": []
+				},
+				{
+					"name": "apis::Subscribe Client to custom API",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"var requestname=\"clients::Subscribe Client to Admin APIs: \";",
+									"",
+									"tests[requestname+\"Status code 200 . . . \"]=responseCode.code===200;",
+									"",
+									"if(tests[requestname+\"Status code 200 . . . \"]){",
+									"    ",
+									"    try{",
+									"    ",
+									"        var result=JSON.parse(responseBody);",
+									"        tests[requestname+\"Result is JSON . . . \"]=true;",
+									"        tests[requestname+\"Checking status . . . \"]=result[\"status\"]===\"success\";",
+									"        tests[requestname+\"Checking response message . . . \"]=(result[\"message\"]);",
+									"    ",
+									"    }catch(e){",
+									"    ",
+									"        console.log(requestname+e);",
+									"        tests[requestname+\"Result is JSON . . . \"]=false;",
+									"    ",
+									"    }",
+									"    ",
+									"}else{ console.log(requestname+responseBody); }"
+								]
+							}
+						}
+					],
+					"request": {
+						"url": "{{BASEURL}}/clients/v2/{{CLIENT_NAME}}/subscriptions/",
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "{{BASIC_AUTHORIZATION_TYPE}} {{BASIC_AUTHORIZATION_USER_TOKEN}}",
+								"description": ""
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"description": ""
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"apiName\": \"{{CUSTOM_API_NAME}}\",\n    \"apiVersion\": \"{{CUSTOM_API_VERSION}}\",\n    \"apiProvider\": \"admin\",\n    \"tier\": \"UNLIMITED\"\n}"
+						},
+						"description": ""
+					},
+					"response": []
+				},
+				{
+					"name": "apis::Verify subscription to custom API",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"var requestname=\"clients::Verify subscription to Admin APIs: \";",
+									"",
+									"tests[requestname+\"Status code 200 . . . \"]=responseCode.code===200;",
+									"",
+									"if(tests[requestname+\"Status code 200 . . . \"]){",
+									"    ",
+									"    try{",
+									"    ",
+									"        var result=JSON.parse(responseBody);",
+									"        tests[requestname+\"Result is JSON . . . \"]=1===1;",
+									"        tests[requestname+\"Checking status . . . \"]=result[\"status\"]===\"success\";",
+									"        if(tests[requestname+\"Checking status . . . \"]){",
+									"            ",
+									"            tests[requestname+\"Checking result is array . . . \"]=(result[\"result\"] instanceof Array);",
+									"            ",
+									"            var responseMatches = result['result'].none(",
+									"                { ",
+									"                    apiName: environment['CUSTOM_API_NAME'],",
+									"                    apiVersion: environment['CUSTOM_API_VERSION']",
+									"                });",
+									"            ",
+									"            tests[requestname+\"Checking response contains AdminServices . . . \"]= (!responseMatches);",
+									"        }",
+									"    ",
+									"    }catch(e){",
+									"    ",
+									"        console.log(requestname+e);",
+									"        tests[requestname+\"Result is JSON . . . \"]=false;",
+									"    ",
+									"    }",
+									"    ",
+									"}else{ console.log(requestname+responseBody); }"
+								]
+							}
+						}
+					],
+					"request": {
+						"url": "{{BASEURL}}/clients/v2/{{CLIENT_NAME}}/subscriptions/",
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "{{BASIC_AUTHORIZATION_TYPE}} {{BASIC_AUTHORIZATION_USER_TOKEN}}",
+								"description": ""
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"description": ""
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": ""
+						},
+						"description": ""
+					},
+					"response": []
+				},
+				{
+					"name": "apis::Verify request to custom API succeeds",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"var requestname=\"clients::Verify subscription to Admin APIs: \";",
+									"",
+									"tests[requestname+\"Status code 200 . . . \"]=responseCode.code===200;",
+									"",
+									"if(tests[requestname+\"Status code 200 . . . \"]){",
+									"    ",
+									"    try{",
+									"    ",
+									"        var result=JSON.parse(responseBody);",
+									"        tests[requestname+\"Result is JSON . . . \"]=(1===1);",
+									"        if(tests[requestname+\"Checking status . . . \"]){",
+									"            ",
+									"            tests[requestname+\"Checking result is array . . . \"]=(result instanceof Object);",
+									"            tests[requestname+\"Checking query parameters were forwarded . . . \"]=(Object.has(result.args, 'foo'));",
+									"            tests[requestname+\"Checking query values were forwarded . . . \"]=(result.args==='bar');",
+									"            ",
+									"            tests[requestname+\"Checking auth header parameters were forwarded . . . \"]=(Object.has(result.args, 'Authorization'));",
+									"            tests[requestname+\"Checking auth header values were forwarded . . . \"]=(result.headers.Authorization===(environment['BASIC_AUTHORIZATION_TYPE'] + ' ' + environment['BASIC_AUTHORIZATION_USER_TOKEN']));",
+									"            ",
+									"            tests[requestname+\"Checking jwt header parameters were forwarded . . . \"]=(Object.has(result.args, environment['JWT_HEADER_NAME']));",
+									"            //tests[requestname+\"Checking jwt header values were forwarded . . . \"]=(result.headers===environment['JWT_HEADER_NAME']);",
+									"            ",
+									"        }",
+									"    ",
+									"    } catch(e){",
+									"    ",
+									"        console.log(requestname+e);",
+									"        tests[requestname+\"Result is JSON . . . \"]=false;",
+									"    ",
+									"    }",
+									"    ",
+									"}else{ console.log(requestname+responseBody); }"
+								]
+							}
+						}
+					],
+					"request": {
+						"url": "{{BASEURL}}/{{CUSTOM_API_NAME}}/{{CUSTOM_API_VERSION}}/get?foo=bar",
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "{{BASIC_AUTHORIZATION_TYPE}} {{BASIC_AUTHORIZATION_USER_TOKEN}}",
+								"description": ""
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"description": ""
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": ""
+						},
+						"description": ""
+					},
+					"response": []
+				},
+				{
+					"name": "apis::Update custom API status",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"var requestname=\"apis::List Tenant APIs: \";",
+									"",
+									"tests[requestname+\"Status code 200 . . . \"]=responseCode.code===200;",
+									"",
+									"if(tests[requestname+\"Status code 200 . . . \"]){",
+									"    ",
+									"    try{",
+									"    ",
+									"        var serviceResponse=JSON.parse(responseBody);",
+									"        ",
+									"        tests[requestname+\"Result is JSON . . . \"]=(1===1);",
+									"        tests[requestname+\"Checking status . . . \"]=serviceResponse.status===\"success\";",
+									"        if(tests[requestname+\"Checking status . . . \"]){",
+									"            ",
+									"            tests[requestname+\"Checking result is object . . . \"]=(serviceResponse.result instanceof Object);",
+									"            ",
+									"            tests[requestname+\"Checking status is RETIRED . . . \"]=serviceResponse.result.status==='RETIRED';",
+									"            ",
+									"        }",
+									"    ",
+									"    }catch(e){",
+									"    ",
+									"        console.log(requestname+e);",
+									"        tests[requestname+\"Result is JSON . . . \"]=false;",
+									"    ",
+									"    }",
+									"    ",
+									"}else{ console.log(requestname+responseBody); }",
+									""
+								]
+							}
+						}
+					],
+					"request": {
+						"url": "{{BASEURL}}/admin/v2/apis/{{CUSTOM_API_ID}}",
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "{{AUTHORIZATION_TOKEN_STRING}}",
+								"description": ""
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"description": ""
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"status\": \"RETIRED\"\n}"
+						},
+						"description": "Create a new API.\n"
+					},
+					"response": []
+				},
+				{
+					"name": "apis::Delete a custom API",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"var requestname=\"clients::Delete a custom API: \";",
+									"",
+									"tests[requestname+\"Status code 204 . . . \"]=responseCode.code===204;",
+									"",
+									"if(tests[requestname+\"Status code 204 . . . \"]){",
+									"    ",
+									"    tests[requestname+\"Result is null . . . \"]=!(responseBody);",
+									"}",
+									"else if(tests[requestname+\"Status code 200 . . . \"]){",
+									"    try{",
+									"        var result=JSON.parse(responseBody);",
+									"        tests[requestname+\"Result is JSON . . . \"]=true;",
+									"        tests[requestname+\"Checking status . . . \"]=result[\"status\"]===\"success\";",
+									"        if(tests[requestname+\"Checking status . . . \"]){",
+									"            tests[requestname+\"Checking result is empty . . . \"]=result.result===null;",
+									"        }",
+									"    } catch(e){",
+									"        console.log(requestname+e+ \"\\n\"+responseBody);",
+									"        tests[requestname+\"Result is JSON . . . \"]=false;",
+									"    }",
+									"}",
+									"else { ",
+									"    console.log(requestname+responseBody); ",
+									"}"
+								]
+							}
+						}
+					],
+					"request": {
+						"url": "{{BASEURL}}/admin/v2/apis/{{CUSTOM_API_ID}}",
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "{{AUTHORIZATION_TOKEN_STRING}}",
+								"description": ""
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"description": ""
+							}
+						],
+						"body": {},
+						"description": "Delete an API.\n"
+					},
+					"response": []
+				},
+				{
+					"name": "apis::Check deleted custom API returns 404",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"var requestname=\"apis::Check deleted custom API returns 404: \";",
+									"",
+									"tests[requestname+\"Status code 404 . . . \"]=responseCode.code===404;",
+									"",
+									"",
+									""
+								]
+							}
+						}
+					],
+					"request": {
+						"url": "{{BASEURL}}/admin/v2/apis/{{CUSTOM_API_ID}}",
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "{{AUTHORIZATION_TOKEN_STRING}}",
+								"description": ""
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"description": ""
+							}
+						],
+						"body": {},
+						"description": "Retrieve details about an API.\n"
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "030 _service_accounts setup",
+			"description": "",
+			"item": [
+				{
+					"name": "service_accounts::Start",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"var requestname=\"service_accounts::Start: \";",
+									"",
+									"tests[requestname+\"Service is present. . . \"]=responseCode.code!==404;",
+									"    ",
+									"if ( true || ! tests[requestname+\"Service is present. . . \"] ) {",
+									"    console.log(\"Service is not present. Skipping remaining \" + requestname.replace(/::.*/,'') + \" service tests...\");",
+									"    postman.setNextRequest(requestname.replace(/::.*/,'::End'));",
+									"}"
+								]
+							}
+						}
+					],
+					"request": {
+						"url": "{{BASEURL}}/admin/v2/service_accounts",
+						"method": "GET",
+						"header": [],
+						"body": {},
+						"description": ""
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "030 service_accounts",
+			"description": "Folder for service_accounts",
+			"item": [
+				{
+					"name": "service_accounts::List Service Accounts",
+					"request": {
+						"url": "{{BASEURL}}/admin/v2/service_accounts",
+						"method": "GET",
+						"header": [],
+						"body": {},
+						"description": "The Service Accounts defined in the tenant. A service account is very much like a normal user account in that it has an associated password and can: generate OAuth clients, use the password grant to obtain access tokens, use access tokens to consume APIs, occupy service roles \n"
+					},
+					"response": []
+				},
+				{
+					"name": "service_accounts::Create a service account",
+					"request": {
+						"url": "https://dev.tenants.staging.agaveapi.co/admin/v2/service_accounts",
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "The description of the account to create."
+						},
+						"description": "Create a new service account.\n"
+					},
+					"response": []
+				},
+				{
+					"name": "service_accounts::Retrieve details about a service account",
+					"request": {
+						"url": {
+							"raw": "https://dev.tenants.staging.agaveapi.co/admin/v2/service_accounts/:accountId",
+							"protocol": "https",
+							"auth": {},
+							"host": [
+								"dev",
+								"tenants",
+								"staging",
+								"agaveapi",
+								"co"
+							],
+							"path": [
+								"admin",
+								"v2",
+								"service_accounts",
+								":accountId"
+							],
+							"variable": [
+								{
+									"value": "{{accountId}}",
+									"id": "accountId"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"body": {},
+						"description": "Details about a service account defined in the tenant. A service account is very much like a normal user account in that it has an associated password and can: generate OAuth clients, use the password grant to obtain access tokens, use access tokens to consume APIs, occupy service roles \n"
+					},
+					"response": []
+				},
+				{
+					"name": "service_accounts::Delete a service account",
+					"request": {
+						"url": {
+							"raw": "https://dev.tenants.staging.agaveapi.co/admin/v2/service_accounts/:accountId",
+							"protocol": "https",
+							"auth": {},
+							"host": [
+								"dev",
+								"tenants",
+								"staging",
+								"agaveapi",
+								"co"
+							],
+							"path": [
+								"admin",
+								"v2",
+								"service_accounts",
+								":accountId"
+							],
+							"variable": [
+								{
+									"value": "{{accountId}}",
+									"id": "accountId"
+								}
+							]
+						},
+						"method": "DELETE",
+						"header": [],
+						"body": {},
+						"description": "Delete a service account.\n"
+					},
+					"response": []
+				},
+				{
+					"name": "service_accounts::Retrieve roles occupied by about a service account",
+					"request": {
+						"url": {
+							"raw": "https://dev.tenants.staging.agaveapi.co/admin/v2/service_accounts/:accountId/roles",
+							"protocol": "https",
+							"auth": {},
+							"host": [
+								"dev",
+								"tenants",
+								"staging",
+								"agaveapi",
+								"co"
+							],
+							"path": [
+								"admin",
+								"v2",
+								"service_accounts",
+								":accountId",
+								"roles"
+							],
+							"variable": [
+								{
+									"value": "{{accountId}}",
+									"id": "accountId"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"body": {},
+						"description": "Retrieve roles occupied by about a service account. \n"
+					},
+					"response": []
+				},
+				{
+					"name": "service_accounts::Add a role to the list of roles occupied by about a service account",
+					"request": {
+						"url": {
+							"raw": "https://dev.tenants.staging.agaveapi.co/admin/v2/service_accounts/:accountId/roles",
+							"protocol": "https",
+							"auth": {},
+							"host": [
+								"dev",
+								"tenants",
+								"staging",
+								"agaveapi",
+								"co"
+							],
+							"path": [
+								"admin",
+								"v2",
+								"service_accounts",
+								":accountId",
+								"roles"
+							],
+							"variable": [
+								{
+									"value": "{{accountId}}",
+									"id": "accountId"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "The role to add."
+						},
+						"description": "Add a role to the list of roles occupied by about a service account.\n"
+					},
+					"response": []
+				},
+				{
+					"name": "service_accounts::Remove a role from the list of roles occupied by about a service account",
+					"request": {
+						"url": {
+							"raw": "https://dev.tenants.staging.agaveapi.co/admin/v2/service_accounts/:accountId/roles/:roleId",
+							"protocol": "https",
+							"auth": {},
+							"host": [
+								"dev",
+								"tenants",
+								"staging",
+								"agaveapi",
+								"co"
+							],
+							"path": [
+								"admin",
+								"v2",
+								"service_accounts",
+								":accountId",
+								"roles",
+								":roleId"
+							],
+							"variable": [
+								{
+									"value": "{{accountId}}",
+									"id": "accountId"
+								},
+								{
+									"value": "{{roleId}}",
+									"id": "roleId"
+								}
+							]
+						},
+						"method": "DELETE",
+						"header": [],
+						"body": {},
+						"description": "Remove a role from the list of roles occupied by about a service account.\n"
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "030 ~service_accounts cleanup",
+			"description": "",
+			"item": [
+				{
+					"name": "service_accounts::End",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"var requestname=\"service_accounts::End: \";",
+									"",
+									"if (requestname.replace(/::.*/,'::Start') === postman.getEnvironmentVariable(\"SKIP_TO_TEST\")) {",
+									"    postman.setNextRequest('cleanup::Start');",
+									"}"
+								]
+							}
+						}
+					],
+					"request": {
+						"url": "https://httpbin.agaveapi.co/status/200",
+						"method": "GET",
+						"header": [],
+						"body": {},
+						"description": ""
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "040 _service_roles setup",
+			"description": "",
+			"item": [
+				{
+					"name": "service_roles::Start",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"var requestname=\"service_roles::Start: \";",
+									"",
+									"tests[requestname+\"Service is present. . . \"]=responseCode.code!==404;",
+									"",
+									"if ( true || ! tests[requestname+\"Service is present. . . \"] ) {",
+									"    console.log(\"Service is not present. Skipping remaining \" + requestname.replace(/::.*/,'') + \" service tests...\");",
+									"    postman.setNextRequest(requestname.replace(/::.*/,'::End'));",
+									"}",
+									""
+								]
+							}
+						}
+					],
+					"request": {
+						"url": "{{BASEURL}}/admin/v2/service_roles",
+						"method": "GET",
+						"header": [],
+						"body": {},
+						"description": ""
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "040 service_roles",
+			"description": "Folder for service_roles",
+			"item": [
+				{
+					"name": "service_roles::List Service Roles",
+					"request": {
+						"url": "https://dev.tenants.staging.agaveapi.co/admin/v2/service_roles",
+						"method": "GET",
+						"header": [],
+						"body": {},
+						"description": "The Service Roles defined in the tenant. A service role is a logical grouping of accounts (both user accounts and service accounts). Membership in a service role can be used to control access to Agave at the API level. Service role membership is also passed through the JWT (see JWT Overview) to the backend service so it can be used to implement other forms of access control, though it should not be confused with the new RBAC (role based access control) system being developed for the core services. The new RBAC system will provide groupings of arbitrary platform objects such as systems, apps, metadata, etc. not just accounts. \n"
+					},
+					"response": []
+				},
+				{
+					"name": "service_roles::Create a service role",
+					"request": {
+						"url": "https://dev.tenants.staging.agaveapi.co/admin/v2/service_roles",
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "The description of the role to create."
+						},
+						"description": "Create a new service role.\n"
+					},
+					"response": []
+				},
+				{
+					"name": "service_roles::Retrieve details about a service role",
+					"request": {
+						"url": {
+							"raw": "https://dev.tenants.staging.agaveapi.co/admin/v2/service_roles/:roleId",
+							"protocol": "https",
+							"auth": {},
+							"host": [
+								"dev",
+								"tenants",
+								"staging",
+								"agaveapi",
+								"co"
+							],
+							"path": [
+								"admin",
+								"v2",
+								"service_roles",
+								":roleId"
+							],
+							"variable": [
+								{
+									"value": "{{roleId}}",
+									"id": "roleId"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"body": {},
+						"description": "Details about a service role defined in the tenant. \n"
+					},
+					"response": []
+				},
+				{
+					"name": "service_roles::Delete a service role",
+					"request": {
+						"url": {
+							"raw": "https://dev.tenants.staging.agaveapi.co/admin/v2/service_roles/:roleId",
+							"protocol": "https",
+							"auth": {},
+							"host": [
+								"dev",
+								"tenants",
+								"staging",
+								"agaveapi",
+								"co"
+							],
+							"path": [
+								"admin",
+								"v2",
+								"service_roles",
+								":roleId"
+							],
+							"variable": [
+								{
+									"value": "{{roleId}}",
+									"id": "roleId"
+								}
+							]
+						},
+						"method": "DELETE",
+						"header": [],
+						"body": {},
+						"description": "Delete a service role.\n"
+					},
+					"response": []
+				},
+				{
+					"name": "service_roles::Retrieve service accounts occupying a service role",
+					"request": {
+						"url": {
+							"raw": "https://dev.tenants.staging.agaveapi.co/admin/v2/service_roles/:roleId/service_accounts",
+							"protocol": "https",
+							"auth": {},
+							"host": [
+								"dev",
+								"tenants",
+								"staging",
+								"agaveapi",
+								"co"
+							],
+							"path": [
+								"admin",
+								"v2",
+								"service_roles",
+								":roleId",
+								"service_accounts"
+							],
+							"variable": [
+								{
+									"value": "{{roleId}}",
+									"id": "roleId"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"body": {},
+						"description": "Retrieve service accounts occupying a service role. \n"
+					},
+					"response": []
+				},
+				{
+					"name": "service_roles::Add a service account to the list of accoounts occupying a role",
+					"request": {
+						"url": {
+							"raw": "https://dev.tenants.staging.agaveapi.co/admin/v2/service_roles/:roleId/service_accounts",
+							"protocol": "https",
+							"auth": {},
+							"host": [
+								"dev",
+								"tenants",
+								"staging",
+								"agaveapi",
+								"co"
+							],
+							"path": [
+								"admin",
+								"v2",
+								"service_roles",
+								":roleId",
+								"service_accounts"
+							],
+							"variable": [
+								{
+									"value": "{{roleId}}",
+									"id": "roleId"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "The account to add."
+						},
+						"description": "Add a service account to the list of accoounts occupying a role.\n"
+					},
+					"response": []
+				},
+				{
+					"name": "service_roles::Remove an account from the list of accounts occupying a role",
+					"request": {
+						"url": {
+							"raw": "https://dev.tenants.staging.agaveapi.co/admin/v2/service_roles/:roleId/service_accounts/:accountId",
+							"protocol": "https",
+							"auth": {},
+							"host": [
+								"dev",
+								"tenants",
+								"staging",
+								"agaveapi",
+								"co"
+							],
+							"path": [
+								"admin",
+								"v2",
+								"service_roles",
+								":roleId",
+								"service_accounts",
+								":accountId"
+							],
+							"variable": [
+								{
+									"value": "{{accountId}}",
+									"id": "accountId"
+								},
+								{
+									"value": "{{roleId}}",
+									"id": "roleId"
+								}
+							]
+						},
+						"method": "DELETE",
+						"header": [],
+						"body": {},
+						"description": "Remove an account from the list of accounts occupying a role.\n"
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "040 ~service_roles cleanup",
+			"description": "",
+			"item": [
+				{
+					"name": "service_roles::End",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"var requestname=\"service_roles::End: \";",
+									"",
+									"if (requestname.replace(/::.*/,'::Start') === postman.getEnvironmentVariable(\"SKIP_TO_TEST\")) {",
+									"    postman.setNextRequest('cleanup::Start');",
+									"}"
+								]
+							}
+						}
+					],
+					"request": {
+						"url": "https://httpbin.agaveapi.co/status/200",
+						"method": "GET",
+						"header": [],
+						"body": {},
+						"description": ""
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "999 cleanup copy",
+			"description": "",
+			"item": [
+				{
+					"name": "cleanup::Start",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"var requestname=\"cleanup::Start \";",
+									""
+								]
+							}
+						}
+					],
+					"request": {
+						"url": "https://httpbin.agaveapi.co/status/200",
+						"method": "GET",
+						"header": [],
+						"body": {},
+						"description": ""
+					},
+					"response": []
+				},
+				{
+					"name": "clients::Unsubscribe Client from Admin APIs",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"var requestname=\"Subscribe Client to Admin APIs: \";",
+									"",
+									"tests[requestname+\"Status code 200 . . . \"]=responseCode.code===200;",
+									"",
+									"if(tests[requestname+\"Status code 200 . . . \"]){",
+									"    ",
+									"    try{",
+									"    ",
+									"        var result=JSON.parse(responseBody);",
+									"        tests[requestname+\"Result is JSON . . . \"]=true;",
+									"        tests[requestname+\"Checking status . . . \"]=result[\"status\"]===\"success\";",
+									"        tests[requestname+\"Checking response message . . . \"]=result[\"message\"]===\"Client removed successfully.\";",
+									"    ",
+									"    }catch(e){",
+									"    ",
+									"        console.log(requestname+e);",
+									"        tests[requestname+\"Result is JSON . . . \"]=false;",
+									"    ",
+									"    }",
+									"    ",
+									"}else{ console.log(requestname+responseBody); }"
+								]
+							}
+						}
+					],
+					"request": {
+						"url": "{{BASEURL}}/clients/v2/{{CLIENT_NAME}}/subscriptions/AdminServices",
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "{{BASIC_AUTHORIZATION_TYPE}} {{BASIC_AUTHORIZATION_USER_TOKEN}}",
+								"description": ""
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"description": ""
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": ""
+						},
+						"description": ""
+					},
+					"response": []
+				},
+				{
+					"name": "cleanup::Delete the New Client copy",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"postman.setEnvironmentVariable(\"CLIENT_NAME\",null);",
+									"",
+									"postman.setEnvironmentVariable(\"TEST_DATE\",null);",
+									"postman.setEnvironmentVariable(\"TEST_DIR\",null);",
+									"postman.setEnvironmentVariable(\"TEST_DIR_ENCODED\",null);",
+									"",
+									"postman.setEnvironmentVariable(\"BASIC_AUTHORIZATION_TYPE\",null);",
+									"postman.setEnvironmentVariable(\"BASIC_AUTHORIZATION_TOKEN\",null);",
+									"postman.setEnvironmentVariable(\"BASIC_AUTHORIZATION_USER_TOKEN\",null);",
+									"postman.setEnvironmentVariable(\"CLIENT_KEY\",null);",
+									"postman.setEnvironmentVariable(\"CLIENT_SECRET\",null);",
+									"postman.setEnvironmentVariable(\"AUTHORIZATION_TOKEN\",null);"
+								]
+							}
+						}
+					],
+					"request": {
+						"url": "{{BASEURL}}/{{CLIENTS_SERVICE}}/{{CLIENTS_VERSION}}{{CLIENT_NAME}}",
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "{{BASIC_AUTHORIZATION_TYPE}} {{BASIC_AUTHORIZATION_USER_TOKEN}}",
+								"description": ""
+							},
+							{
+								"key": "{{JWT_HEADER_NAME}}",
+								"value": "{{JWT_HEADER_VALUE}}",
+								"description": ""
+							}
+						],
+						"body": {},
+						"description": ""
+					},
+					"response": []
+				}
+			]
+		}
+	]
+}
