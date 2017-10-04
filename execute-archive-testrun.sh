@@ -2,7 +2,7 @@
 
 # Usage :
 # Script to run the newman tests and archive the results
-#
+# run from the project directory root
 # example:
 # execute-archive-testrun.sh dev.tenants.sandbox.agaveapi.co:149.165.157.105  dev.sandbox "-s apps"
 

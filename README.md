@@ -15,3 +15,4 @@
     for host access.
 
 
+See the CIC-AgavePostmanintegrationTestSuite pdf file for more details on the Newman tests.
