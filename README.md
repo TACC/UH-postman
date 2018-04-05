@@ -16,3 +16,7 @@
 
 
 See the CIC-AgavePostmanintegrationTestSuite pdf file for more details on the Newman tests.
+jenkins job run:
+
+cd tenants
+./newman-v2.sh -v $service --add-host dev.tenants.develop.agaveapi.co:129.114.97.227  dev.develop
