@@ -1,0 +1,28 @@
+{
+  "dev":{   
+          "BASE_URL":"",
+          "token":"",
+          "storage_id":"",
+          "exec_id":"",
+          "JSON_FILE_STORAGE":"",
+          "JSON_FILE_EXEC":"",
+          "testmetadata_uuid":"",
+          "schema_id": "",
+          "version":""
+        },
+        
+    "staging":{
+          "BASE_URL":"",
+          "token":"",
+          "storage_id":"",
+          "exec_id":"",
+          "JSON_FILE_STORAGE":"",
+          "JSON_FILE_EXEC":"",
+          "testmetadata_uuid":"",
+          "schema_id": "",
+          "version":""
+
+       }
+      
+  
+}
